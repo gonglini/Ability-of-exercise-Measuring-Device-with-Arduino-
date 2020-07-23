@@ -1,0 +1,201 @@
+#include <LiquidCrystal.h >          
+#define TRIG_PIN 8
+#define ECHO_PIN 9
+#define TRIG_PIN1 10
+#define ECHO_PIN1 11
+#define TRIG_PIN2 34
+#define ECHO_PIN2 35
+#define TRIG_PIN3 30
+#define ECHO_PIN3 31
+#define TRIG_PIN4 36
+#define ECHO_PIN4 37
+#define TRIG_PIN5 38
+#define ECHO_PIN5 39
+#define detDist 30
+#define LED_RED 12
+#define LED_BLUE 33
+#define LED_YELL 32
+#define distTotal 50
+  
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
+  
+double previousMillis;
+bool isStart;
+bool isFirst;
+bool isSecond;
+bool isThird;
+bool isFourth;
+bool isFifth;
+bool isSixth;
+  
+double sec; 
+int dist_1st;
+int dist_2nd;
+int dist_3rd;
+int dist_4th;
+int dist_5th;
+int dist_6th;
+  
+double interval;
+
+void setup() {
+  pinMode(LED_RED, INPUT);
+  pinMode(LED_BLUE, OUTPUT);
+  pinMode(LED_YELL, OUTPUT);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  pinMode(TRIG_PIN1, OUTPUT);
+  pinMode(ECHO_PIN1, INPUT);
+  pinMode(TRIG_PIN2, OUTPUT);
+  pinMode(ECHO_PIN2, INPUT);
+  pinMode(TRIG_PIN3, OUTPUT);
+  pinMode(ECHO_PIN3, INPUT);
+  pinMode(TRIG_PIN4, OUTPUT);
+  pinMode(ECHO_PIN4, INPUT);
+  pinMode(TRIG_PIN5, OUTPUT);
+  pinMode(ECHO_PIN5, INPUT);
+  
+  lcd.begin(16, 2);
+  lcd.clear();
+  Serial.begin(9600);
+  previousMillis = 0;
+  isStart = false;
+  isFirst = true;
+  isSecond = false;
+  isThird = false;
+  isFourth = false;
+  isFifth = false;
+  isSixth = false;
+  sec = 0;
+}
+  
+void printSec(LiquidCrystal lcd) {
+  sec = (millis() - previousMillis) / (double) 1000;
+  lcd.setCursor(0, 0);
+  lcd.print(sec);
+  lcd.setCursor(11, 0);
+  lcd.print("sec's");
+}
+void printFirst(LiquidCrystal lcd) {
+  lcd.clear();
+  lcd.print("Are you Ready?.")
+}
+void printVel(LiquidCrystal lcd) {
+  double vel = distTotal / sec;
+  lcd.setCursor(0, 1);
+  lcd.print(vel);
+  lcd.setCursor(12, 1);
+  lcd.print("m/s");
+}
+bool getDist(char which) {
+  bool res = false;
+  switch (which) {
+  case '1':
+    digitalWrite(TRIG_PIN, HIGH);
+    digitalWrite(TRIG_PIN, LOW);
+    dist_1st = pulseIn(ECHO_PIN, HIGH) / 58.2;
+   res = true;
+   break;
+  case '2':
+    digitalWrite(TRIG_PIN2, HIGH);
+    digitalWrite(TRIG_PIN2, LOW);
+    dist_2nd = pulseIn(ECHO_PIN2, HIGH) / 58.2;
+    res = true;
+   break;
+  case '3':
+    digitalWrite(TRIG_PIN3, HIGH);
+    digitalWrite(TRIG_PIN3, LOW);
+    dist_3rd = pulseIn(ECHO_PIN3, HIGH) / 58.2;
+    res = true;
+   break;
+  case '4':
+    digitalWrite(TRIG_PIN4, HIGH);
+ digitalWrite(TRIG_PIN4, LOW);
+    dist_4th = pulseIn(ECHO_PIN4, HIGH) / 58.2;
+    res = true;
+   break;
+  case '5':
+    digitalWrite(TRIG_PIN5, HIGH);
+    digitalWrite(TRIG_PIN5, LOW);
+    dist_5th = pulseIn(ECHO_PIN5, HIGH) / 58.2;
+
+    res = true;
+   break;   
+  case '6':
+    digitalWrite(TRIG_PIN1, HIGH);
+    digitalWrite(TRIG_PIN1, LOW);
+    dist_6th = pulseIn(ECHO_PIN1, HIGH) / 58.2;
+    res = true;
+   break;
+  return res;
+bool isDetected(int dist) {
+  return dist <= detDist;
+void printConsole(const char * which) {
+  Serial.println("\n");
+  Serial.println(which);
+  Serial.println(sec);
+  Serial.println("Sec's");
+  Serial.println("........");
+  Serial.println((interval += 10) / (double) sec);
+  Serial.println("m/s");
+  Serial.println("\n--------");
+}
+  }}}
+void loop() 
+  if (isFirst) {
+    printFirst(lcd);
+    digitalWrite(LED_BLUE, HIGH);
+    isFirst = false;
+    interval = 0;
+  }
+  if (!isFirst && getDist('1') && isDetected(dist_1st)) {
+    isStart = true;
+    lcd.clear();
+    printSec(lcd);
+    previousMillis = millis();
+    isSecond = true;
+    digitalWrite(LED_RED, HIGH);
+    digitalWrite(LED_BLUE, LOW);
+  }
+  if (isStart) {
+    printSec(lcd);
+  }
+
+
+  
+  if (isSecond && getDist('2') && isDetected(dist_2nd)) {
+    printConsole("2nd");
+    isSecond = false;
+    isThird = true;
+  }
+  
+  if (isThird && getDist('3') && isDetected(dist_3rd)) {
+  
+    printConsole("3rd");
+    isThird = false;
+    isFourth = true;
+  }
+  if (isFourth && getDist('4') && isDetected(dist_4th)) {
+  
+    printConsole("4th");
+    isFourth = false;
+    isFifth = true;
+  }
+  if (isFifth && getDist('5') && isDetected(dist_5th)) {  
+    printConsole("5th");
+    isFifth = false;
+    isSixth = true;
+  }
+  if (isSixth && getDist('6') && isDetected(dist_6th)) {
+  
+    printVel(lcd);
+    isStart = false;
+    digitalWrite(LED_RED, LOW);
+    digitalWrite(LED_YELL, HIGH);
+    delay(2999);
+    digitalWrite(LED_YELL, LOW);
+    isFirst = true;
+    isSixth = false
+ }
+}
+
